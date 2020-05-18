@@ -1,47 +1,49 @@
 import java.util.ArrayList;
 
-public class CoolStuff {
+public class ZeckendorfPartitions{
     static int[] seq;
 
     public static void main(String args[]) {
-        int n = 0;
+        int count = 0;
         int x0 = Integer.parseInt(args[0]);
         int x1 = Integer.parseInt(args[1]);
 
-        int y = Integer.parseInt(args[2]);
+        int N = Integer.parseInt(args[2]);
 
-        seq = enumerateSeq(x0, x1, y);
+        seq = enumerateSeq(x0, x1, N);
         int negT = 0;
-        for (int i = 0; i <= seq.length; i++) {
+        for (int i = 0; i < seq.length; i++) {
             if (seq[i] < 0)
                 negT -= seq[i];
         }
-        for (int i = 0; i < y; i++) {
-            CoolerStuff hi = new CoolerStuff(seq, i, negT);
-            hi.decompose(seq.length+1, i);
-            ArrayList<String> result = hi.recompose(seq.length, 0);
+        for (int i = 1; i <= N; i++) {
+            NonconsecutivePartition partial = new NonconsecutivePartition(seq, i, negT);
+            partial.decompose(seq.length+1, i);
+            ArrayList<String> result = partial.recompose(0);
             if(result.size()>1){
-                n = n+1;
+                count += 1;
             }
-            System.out.println("Decomposing " + i + ": " + result.size() + " way(s)");
+            System.out.println("Partitioning " + i + ": " + result.size() + " way(s)");
 
             for (String s : result) {
                 System.out.print(s);
             }
             System.out.println("");
         }
-        System.out.println(n);
+        System.out.println("Number of natural numbers that do not have unique nonconsecutive partitions: " + count);
     }
 
+    /** Enumerates the terms of the second-order linear recurrence sequence defined by x0 and x1
+     *  up to the integer N.
+     */
 
-
-    private static int[] enumerateSeq(int x0, int x1, int y) {
+    private static int[] enumerateSeq(int x0, int x1, int N) {
         ArrayList<Integer> seq = new ArrayList<>();
         seq.add(x0);
         seq.add(x1);
 
         int z = x0 + x1;
-        while (z <= y) {
+        while (z <= N) {
             seq.add(z);
             x0 = x1;
             x1 = z;
@@ -55,18 +57,41 @@ public class CoolStuff {
         return intArray;
     }
 
-    private static class CoolerStuff {
-        boolean [][]donezoed;
-        int[] seq;
-        int y, negT;
+    /**
+     * Static helper class that is used to define the nonconsecutive partition of the integer
+     * N passed in the sequence. We also pass in the lowest negative number
+     * in the sequence for array indexing purposes.
+     */
 
-        public CoolerStuff(int[] seq, int y, int negT) {
+    private static class NonconsecutivePartition{
+
+    /** Memoization table that signifies true for a successful nonconsecutive partition,
+     *  false otherwise. It's parameterized by two integers:
+     *      - The sum of a partial successful partition up to an index.
+     *      - The next smallest integer index in our partition.
+     */
+
+        boolean [][] memoPartition;
+        int[] seq;
+        int N, negT;
+
+        public NonconsecutivePartition(int[] seq, int N, int negT) {
             this.seq = seq;
-            this.y = y;
+            this.N = N;
             this.negT = negT;
 
-            donezoed = new boolean[y+1+negT][seq.length];
+            memoPartition = new boolean[N+1+negT][seq.length];
         }
+
+         /**
+         * We attempt to do a partial nonconsecutive partition an integer based off of the
+         * last index in the nonconsecutive partition by attempting to subtract all possible
+         * indices (0, 1, ..., maxInd -2) from our remainder and use a recursive
+         * call.
+         * @param maxInd the last index used.
+         * @param rem the remaining sum to the nonconsecutive partition.
+         * @return true iff a nonconsecutive partition is possible, false otherwise.
+         */
 
         private boolean decompose(int maxInd, int rem) {
             if (rem == 0) {
@@ -79,27 +104,41 @@ public class CoolStuff {
                 i = rem-seq[j];
                 res = decompose(j, i);
                 if (res) {
-                    //System.out.println(i + " " + negT + " " + j);
-                    donezoed[i+negT][j] = true;
+                    memoPartition[i+negT][j] = true;
                     resT = true;
                 }
             }
             return resT;
         }
 
-        private ArrayList<String> recompose(int l, int sum) {
+         /**
+         * Returns any successful nonconsecutive partition based off of the partial sum passed
+         * passed through. The sum signifies the sum of the sequence numbers
+         * starting from the lowest number and returns a list of space separated nonconsecutive
+         * partitions.
+         * @param sum partial sum
+         */
+
+        private ArrayList<String> recompose(int sum) {
             ArrayList<String> result = new ArrayList<>();
-            if (sum == y) {
+            if (sum == N) {
                 result.add("\n");
             }
 
-            for (int j = 0; j < l; j++) {
-                if (donezoed[sum+negT][j]) {
-                    ArrayList<String> hi = recompose(l, sum+seq[j]);
-                    for (int i = 0; i < hi.size(); i++) {
-                        hi.set(i, j + " " + hi.get(i));
+            for (int j = 0; j < seq.length; j++) {
+
+            /**
+            * If the sum that we have is successful in the memoization
+            * table, we add the sequence number and recursively call
+            * while also adding the index to all strings returned in the list.
+            */
+
+                if (memoPartition[sum+negT][j]) {
+                    ArrayList<String> partial = recompose(sum+seq[j]);
+                    for (int i = 0; i < partial.size(); i++) {
+                        partial.set(i, j + " " + partial.get(i));
                     }
-                    result.addAll(hi);
+                    result.addAll(partial);
                 }
             }
             return result;
