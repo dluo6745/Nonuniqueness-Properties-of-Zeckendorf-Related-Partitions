@@ -67,8 +67,8 @@ public class ZeckendorfPartitions{
 
     /** Memoization table that signifies true for a successful nonconsecutive partition,
      *  false otherwise. It's parameterized by two integers:
-     *      - The sum of a partial successful partition up to an index.
-     *      - The next smallest integer index in our partition.
+     *      - The sum of a partial successful nonconsecutive partition up to an index.
+     *      - The next smallest integer index in our nonconsecutive partition.
      */
 
         boolean [][] memoPartition;
@@ -84,9 +84,9 @@ public class ZeckendorfPartitions{
         }
 
          /**
-         * We attempt to do a partial nonconsecutive partition an integer based off of the
-         * last index in the nonconsecutive partition by attempting to subtract all possible
-         * indices (0, 1, ..., maxInd -2) from our remainder and use a recursive
+         * We do a partial nonconsecutive partition based off of the
+         * last index in the nonconsecutive partition by subtracting all possible
+         * indices (0, 1, ..., maxInd -2) from our remainder and using a recursive
          * call.
          * @param maxInd the last index used.
          * @param rem the remaining sum to the nonconsecutive partition.
@@ -112,7 +112,7 @@ public class ZeckendorfPartitions{
         }
 
          /**
-         * Returns any successful nonconsecutive partition based off of the partial sum passed
+         * Returns any successful nonconsecutive partition based off the partial sum
          * passed through. The sum signifies the sum of the sequence numbers
          * starting from the lowest number and returns a list of space separated nonconsecutive
          * partitions.
